@@ -6,72 +6,91 @@
 
 import json
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, DateTime, Text, Integer
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Index, DECIMAL
+from sqlalchemy.dialects.postgresql import JSON
+from db import Base  # 使用统一的Base
 
 class MagnetLink(Base):
-    """磁力链接表"""
-    __tablename__ = "magnet_links_v2"
+    __tablename__ = "magnet_links"
     
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    code = Column(String(50), index=True, nullable=False, comment="番号")
-    title = Column(String(500), comment="原始标题")
-    title_cn = Column(String(500), comment="中文标题")
-    size = Column(String(20), comment="文件大小")
-    is_uncensored = Column(Boolean, default=False, comment="是否无码")
-    images = Column(Text, comment="图片链接JSON数组")
-    magnets = Column(Text, comment="磁力链接JSON数组")
-    source_url = Column(String(500), comment="来源URL")
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(500), index=True)
+    content = Column(Text)
+    url = Column(String(500), unique=True, index=True)
+    images = Column(Text)  # JSON格式存储图片链接列表
+    magnets = Column(Text)  # JSON格式存储磁力链接列表
+    code = Column(String(100), index=True)
+    size = Column(String(50))
+    is_uncensored = Column(Boolean, default=False)
+    author = Column(String(200))  # 从content提取的女优
+    forum_id = Column(String(10), index=True)  # 论坛ID
+    forum_type = Column(String(20), index=True)  # 'standard_av' 或 'non_av'
+    magnet_hash = Column(String(64), index=True)  # 用于去重的hash
+    created_at = Column(DateTime, default=datetime.utcnow)
     
-    # 元数据字段
-    studio = Column(String(100), comment="厂牌")
-    studio_cn = Column(String(100), comment="中文厂牌")
-    actresses = Column(Text, comment="女优列表JSON数组")
-    actresses_cn = Column(Text, comment="中文女优列表JSON数组")
-    tags = Column(Text, comment="标签列表JSON数组")
-    tags_cn = Column(Text, comment="中文标签列表JSON数组")
-    release_date = Column(String(20), comment="发布日期")
-    cover_url = Column(String(500), comment="封面图片")
-    source = Column(String(50), comment="数据来源")
+    # 新增视频信息字段
+    duration = Column(String(20))  # 视频时长
+    resolution = Column(String(20))  # 分辨率
+    format = Column(String(20))  # 视频格式
+    language = Column(String(50))  # 语言
+    subtitles = Column(Boolean, default=False)  # 是否有字幕
     
-    # 系统字段
-    created_at = Column(DateTime, default=datetime.utcnow, comment="创建时间")
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment="更新时间")
-    raw_text = Column(Text, comment="原始文本（用于调试）")
+    # 图片信息
+    cover_url = Column(String(500))  # 封面图片URL
+    screenshot_urls = Column(JSON)  # 截图URL数组
+    poster_urls = Column(JSON)  # 海报URL数组
+    
+    # 标签和分类
+    tags = Column(JSON)  # 标签数组
+    categories = Column(JSON)  # 分类数组
+    
+    # 统计信息
+    download_count = Column(Integer, default=0)  # 下载次数
+    view_count = Column(Integer, default=0)  # 查看次数
+    rating = Column(DECIMAL(3,2))  # 评分 (0.00-5.00)
     
     def to_dict(self):
         """转换为字典"""
         return {
             "id": self.id,
-            "code": self.code,
             "title": self.title,
-            "title_cn": self.title_cn,
+            "content": self.content,
+            "url": self.url,
+            "images": self.images,
+            "magnets": self.magnets,
+            "code": self.code,
             "size": self.size,
             "is_uncensored": self.is_uncensored,
-            "images": json.loads(self.images) if self.images else [],
-            "magnets": json.loads(self.magnets) if self.magnets else [],
-            "source_url": self.source_url,
-            "studio": self.studio,
-            "studio_cn": self.studio_cn,
-            "actresses": json.loads(self.actresses) if self.actresses else [],
-            "actresses_cn": json.loads(self.actresses_cn) if self.actresses_cn else [],
-            "tags": json.loads(self.tags) if self.tags else [],
-            "tags_cn": json.loads(self.tags_cn) if self.tags_cn else [],
-            "release_date": self.release_date,
-            "cover_url": self.cover_url,
-            "source": self.source,
+            "author": self.author,
+            "forum_id": self.forum_id,
+            "forum_type": self.forum_type,
+            "magnet_hash": self.magnet_hash,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "duration": self.duration,
+            "resolution": self.resolution,
+            "format": self.format,
+            "language": self.language,
+            "subtitles": self.subtitles,
+            "cover_url": self.cover_url,
+            "screenshot_urls": self.screenshot_urls,
+            "poster_urls": self.poster_urls,
+            "tags": self.tags,
+            "categories": self.categories,
+            "download_count": self.download_count,
+            "view_count": self.view_count,
+            "rating": float(self.rating) if self.rating else None
         }
     
     @classmethod
-    def from_dict(cls, data: dict):
-        """从字典创建实例"""
-        # 处理JSON字段
-        for field in ["images", "magnets", "actresses", "actresses_cn", "tags", "tags_cn"]:
-            if field in data and isinstance(data[field], list):
-                data[field] = json.dumps(data[field], ensure_ascii=False)
-        
+    def from_dict(cls, data):
+        """从字典创建对象"""
         return cls(**data)
+
+# 创建索引
+Index('idx_magnet_hash', MagnetLink.magnet_hash)
+Index('idx_forum_type', MagnetLink.forum_type)
+Index('idx_code_forum', MagnetLink.code, MagnetLink.forum_id)
+Index('idx_title', MagnetLink.title)
+Index('idx_url', MagnetLink.url)
+Index('idx_created_at', MagnetLink.created_at)
+Index('idx_author', MagnetLink.author)

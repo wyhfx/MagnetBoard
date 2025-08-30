@@ -1,69 +1,41 @@
 version: '3.8'
 
 services:
-  sehuatang-crawler:
-    build: .
-    container_name: sehuatang-crawler
+  sehuatang-app:
+    image: wyh3210277395/sehuatang-crawler:latest
+    container_name: sehuatang-app
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      # MetaTube 配置
-      - METATUBE_URL=http://192.168.31.102:8080
-      - METATUBE_PROVIDER=JavBus
-      - METATUBE_FALLBACK=true
-      
-      # 翻译配置（可选）
-      # - TRANS_PROVIDER=baidu
-      # - BAIDU_APPID=your_appid
-      # - BAIDU_KEY=your_key
-      
-      # 代理配置（可选）
-      # - HTTP_PROXY=http://192.168.31.85:7891
-      # - HTTPS_PROXY=http://192.168.31.85:7891
-      # - NO_PROXY=localhost,127.0.0.1,192.168.31.102
-      
-      # 应用配置
-      - HOST=0.0.0.0
-      - PORT=8000
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=sehuatang_db
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=sehuatang123
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - APP_RELOAD=false
       - DEBUG=false
-      
-      # Chrome 配置
-      - CHROME_BIN=/usr/bin/google-chrome
-      - CHROMEDRIVER_PATH=/usr/local/bin/chromedriver
     volumes:
-      # 数据持久化
       - ./data:/app/data
       - ./logs:/app/logs
-      # 前端构建文件（如果需要）
-      - ./frontend/build:/app/frontend/build
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - sehuatang-network
-
-  # 可选：添加一个简单的Nginx反向代理
-  nginx:
-    image: nginx:alpine
-    container_name: sehuatang-nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - sehuatang-crawler
-    restart: unless-stopped
-    networks:
-      - sehuatang-network
+      - postgres
 
-networks:
-  sehuatang-network:
-    driver: bridge
+  postgres:
+    image: postgres:15-alpine
+    container_name: sehuatang-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=sehuatang_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=sehuatang123
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --lc-collate=C --lc-ctype=C
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  data:
-  logs:
+  postgres_data:

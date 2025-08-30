@@ -4,11 +4,12 @@ uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
 # 数据库
-sqlalchemy==2.0.23
-aiosqlite==0.19.0
+sqlalchemy>=2.0.27
+psycopg2-binary==2.9.9
 
 # HTTP 请求和解析
 requests==2.31.0
+httpx[http2]==0.25.2
 beautifulsoup4==4.12.2
 lxml==4.9.3
 
@@ -23,5 +24,12 @@ aiofiles==23.2.1
 selenium==4.15.2
 webdriver-manager==4.0.1
 
+# Playwright 相关
+playwright==1.40.0
+
 # 其他工具
 python-dateutil==2.8.2
+watchdog==3.0.0
+croniter==2.0.1
+pytz==2023.3
+psutil==5.9.5
