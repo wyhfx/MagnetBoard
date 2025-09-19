@@ -154,18 +154,7 @@ docker-compose up -d
 - ☁️ **云盘支持**: CloudDrive2 的 115 离线推送
 - 🎬 **元数据增强**: 集成 MetaTube 获取详细信息
 
-## 💰 赞赏支持
 
-如果这个项目对你有帮助，欢迎赞赏支持～非常感谢！
-
-<div align="center">
-  <img src="TFwVyCiHdHb8h5jTVNiMwj18KSa1913mNr" alt="虚拟货币" width="360">
-  
-  <br/>
-  <br/>
-  
-
-</div>
 
 ### 其他支持方式
 
