@@ -159,7 +159,7 @@ docker-compose up -d
 如果这个项目对你有帮助，欢迎赞赏支持～非常感谢！
 
 <div align="center">
-  <img src="https://youke1.picui.cn/s1/2025/09/07/68bd4edae214b.jpg" alt="微信赞赏码" width="360">
+  <img src="TFwVyCiHdHb8h5jTVNiMwj18KSa1913mNr" alt="虚拟货币" width="360">
   
   <br/>
   <br/>
